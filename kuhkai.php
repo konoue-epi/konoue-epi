@@ -4,7 +4,7 @@
  *	kuhkaiルーム用bot
  *	(hot pepperからの予約メールを発言する）
  *	2021/07/10 H.Konoue
- *	Rev.2022.0125.12
+ *	Rev.2022.0308.1
  */
 require_once(dirname(__FILE__). '/base.php');
 
@@ -56,9 +56,8 @@ function Main()
 	// subject判定
 	$subject = mb_convert_encoding($object->headers['subject'], "UTF-8", $object->ctype_parameters['charset']);
 	if (preg_match("/キャンセル/", $subject)) {
-		$pairs['cancellation'] = 'cancel';
+		$pairs['cancellation'] = 'cancellation';
 	}
-
 
 	// body判定
 	$buf = mb_convert_encoding($object->body, "UTF-8", $object->ctype_parameters['charset']);
@@ -110,8 +109,16 @@ function sendMessage($pairs)
 	}
 
 	// 本文
-	$buf = '[info][title]'. $pretitle. $customer->name. '様からご予約が入りました。('. $customer->reserve_no. ')[/title]'
-		 . ' ご来店は '. $appointment. '、「'. $customer->menu. '」をご希望です。';
+	if (!$customer->isCancellation()) {
+		$iscancel = 'のキャンセル';
+	}
+	else {
+		$iscancel = '';
+	}
+
+	$buf = '[info][title]'. $pretitle. $customer->name. '様からご予約'. $iscancel
+		. 'が入りました。('. $customer->reserve_no. ')[/title]'
+		. ' ご来店は '. $appointment. '、「'. $customer->menu. '」をご希望です。';
 
 	// 指名あり
 	if ($customer->reserve_staff != '指名なし') {
